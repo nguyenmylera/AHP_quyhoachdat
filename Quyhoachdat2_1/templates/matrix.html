@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hệ thống ra quyết định về quy hoạch và phân bổ đất đai</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/base.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/main.css') }}"
+    />
+    <style>
+      .comparison-table input[type="text"] {
+        width: 90%; /* Tăng độ rộng một chút */
+        padding: 6px;
+        border: 1px solid #ccc;
+        box-sizing: border-box;
+        text-align: center;
+        font-size: 0.95em;
+      }
+      .comparison-table td {
+        vertical-align: middle;
+        text-align: center;
+        padding: 4px; /* Thêm padding cho td */
+      }
+      .comparison-table th {
+        white-space: nowrap;
+        padding: 8px 5px; /* Thêm padding cho th */
+      }
+      .readonly-cell {
+        background-color: #f0f0f0; /* Màu nền nhạt hơn */
+        padding: 7px 6px; /* Điều chỉnh padding cho giống input */
+        display: inline-block;
+        width: 90%; /* Giống input */
+        box-sizing: border-box;
+        text-align: center;
+        border: 1px solid #dcdcdc; /* Border nhạt hơn */
+        min-height: 32px; /* Chiều cao tương đương input */
+        font-size: 0.95em;
+        color: #555; /* Màu chữ cho giá trị được điền tự động */
+        border-radius: 3px;
+      }
+      .hidden {
+        display: none;
+      }
+      .table-wrapper button[type="submit"] {
+        margin-top: 15px;
+      }
+      .add-form {
+        margin-bottom: 20px;
+        padding: 15px;
+        border: 1px solid #eee;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+      }
+      .add-form label {
+        display: inline-block;
+        margin-right: 10px;
+        font-weight: bold;
+      }
+      .add-form input[type="text"] {
+        padding: 5px;
+        margin-right: 10px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+      }
+      .add-form button {
+        padding: 5px 10px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+      }
+      .add-form button:hover {
+        background-color: #0056b3;
+      }
+      .flash-messages {
+        list-style: none;
+        padding: 0;
+        margin: 10px 0;
+      }
+      .flash-messages li {
+        padding: 10px;
+        margin-bottom: 5px;
+        border-radius: 4px;
+        word-wrap: break-word;
+        white-space: pre-wrap;
+      }
+      .flash-messages li.success {
+        background-color: #d4edda;
+        color: #155724;
+        border-color: #c3e6cb;
+      }
+      .flash-messages li.error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border-color: #f5c6cb;
+      }
+      .flash-messages li.warning {
+        background-color: #fff3cd;
+        color: #856404;
+        border-color: #ffeeba;
+      }
+      .flash-messages li.info {
+        background-color: #d1ecf1;
+        color: #0c5460;
+        border-color: #bee5eb;
+      }
+      .selection-group {
+        margin-bottom: 10px;
+      }
+      .selection-group input[type="checkbox"] {
+        margin-right: 5px;
+        vertical-align: middle;
+      }
+      .selection-group label {
+        font-weight: normal;
+        vertical-align: middle;
+      }
+      .checkbox-item-container {
+        display: inline-block;
+        margin-right: 15px;
+        margin-bottom: 8px;
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background-color: #fdfdfd;
+      }
+      .input-error-message {
+        color: red;
+        font-size: 0.8em;
+        display: block;
+        margin-top: 2px;
+      }
+      .disabled-link {
+        color: #aaa;
+        cursor: not-allowed;
+        pointer-events: none;
+      }
+      .disabled-link:hover {
+        background-color: transparent;
+      }
+      .import-button-container {
+        display: flex; /* Cho phép dùng justify-content */
+        justify-content: flex-end; /* Đẩy nút về bên phải */
+        margin-bottom: 15px; /* Khoảng cách với bảng ma trận bên dưới */
+        /* margin-top: -40px; */ /* Có thể cần điều chỉnh tùy thuộc vào vị trí tiêu đề h2 */
+        /* Nếu tiêu đề h2 và nút import gần nhau, bạn có thể bỏ margin-top này */
+      }
+
+      .import-excel-trigger-button {
+        background-color: #17a2b8;
+        color: white;
+        padding: 8px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9em; /* Giảm nhẹ font size nếu cần */
+        /* margin-bottom: 0; */ /* Bỏ margin-bottom ở đây vì đã có ở container */
+        display: inline-block;
+      }
+      .import-excel-trigger-button:hover {
+        background-color: #138496;
+      }
+      .hidden-file-input-form {
+        display: none;
+      }
+      .import-instructions {
+        /* Style cho phần hướng dẫn */
+        font-size: 0.85em;
+        color: #555;
+        margin-top: 5px; /* Khoảng cách từ nút import xuống hướng dẫn */
+        text-align: right; /* Căn phải hướng dẫn nếu muốn nó nằm dưới nút */
+        clear: both; /* Đảm bảo nó không bị float nếu nút có float (dù ở đây không dùng) */
+      }
+       .saaty-input {
+        min-width: 100px; /* Hoặc giá trị phù hợp */
+        text-align: center;
+    }
+    .matrix-table th, .matrix-table td {
+        vertical-align: middle;
+        text-align: center;
+        padding: 0.4rem !important; /* Giảm padding một chút */
+    }
+    .matrix-table th:first-child, .matrix-table td:first-child {
+        text-align: left;
+        font-weight: bold;
+        min-width: 150px; /* Độ rộng cho cột tên TC/PA */
+    }
+    .comparison-cell {
+        position: relative;
+    }
+    .reciprocal-value {
+        position: absolute;
+        bottom: -18px; /* Điều chỉnh vị trí cho phù hợp */
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 0.75em;
+        color: #6c757d; /* Màu xám */
+        white-space: nowrap;
+    }
+    .import-button-container {
+        display: flex;
+        justify-content: flex-end; /* Căn phải nút import */
+        margin-bottom: 1rem;
+    }
+    .import-excel-trigger-button {
+        background-color: #198754; /* Màu xanh lá cây */
+        color: white;
+        border: none;
+        padding: 0.375rem 0.75rem;
+        border-radius: 0.25rem;
+        cursor: pointer;
+    }
+    .import-excel-trigger-button:hover {
+        background-color: #157347;
+    }
+    .hidden-file-input-form {
+        display: none; /* Ẩn form input file thực sự */
+    }
+    .consistency-message {
+        font-size: 0.9em;
+        margin-top: 5px;
+    }
+    .consistent { color: green; }
+    .inconsistent { color: red; }
+    .warning { color: orange; }
+    .import-button-container-fixed {
+    position: absolute;
+    top: 30px;
+    right: 40px;
+    z-index: 10;
+    display: flex;
+    justify-content: flex-end;
+}
+.content-wrapper {
+    position: relative;
+}
+.import-excel-trigger-button-large {
+    background-color: #198754;
+    color: white;
+    border: none;
+    padding: 16px 32px;
+    border-radius: 0.35rem;
+    cursor: pointer;
+    font-size: 1.15em;
+    font-weight: bold;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.import-excel-trigger-button-large:hover {
+    background-color: #157347;
+}
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <div class="app_container">
+        <div class="sidebar">
+          <ul>
+            <li><a href="{{ url_for('home') }}">Trang chủ</a></li>
+            <li><a href="{{ url_for('history_list_route') }}">Lịch sử Phân tích</a></li>
+          </ul>
+        </div>
+        <div class="content-wrapper">
+          <header>
+            HỆ THỐNG HỖ TRỢ RA QUYẾT ĐỊNH VỀ QUY HOẠCH VÀ PHÂN BỔ ĐẤT ĐAI
+          </header>
+          <div class="content">
+            <div class="grid">
+              <div class="grid__row">
+                <div class="grid_column-9">
+                  <div class="container">
+                    {% with messages =
+                    get_flashed_messages(with_categories=true) %} {% if messages
+                    %}
+                    <ul class="flash-messages">
+                      {% for category, message in messages %}
+                      <li class="{{ category }}">{{ message }}</li>
+                      {% endfor %}
+                    </ul>
+                    {% endif %} {% endwith %}
+                   <!-- START: NÚT IMPORT EXCEL (CÓ THỂ IMPORT CẢ TC VÀ PA) -->
+        {% if criteria %} {# Chỉ hiển thị khi đã có tiêu chí được xác định #}
+        <div class="import-button-container-fixed">
+          <button
+              type="button"
+              class="import-excel-trigger-button-large"
+              onclick="document.getElementById('excel_file_update_matrices_hidden').click();"
+              title="Import/Cập nhật các ma trận từ file Excel"
+          >
+              <i class="fas fa-file-upload"></i> Cập nhật Ma trận từ Excel
+          </button>
+            <form
+                method="POST"
+                action="{{ url_for('import_excel_route') }}" {# <<<<< TRỎ ĐẾN ROUTE IMPORT TOÀN BỘ #}
+                enctype="multipart/form-data"
+                id="updateMatricesFromExcelForm"
+                class="hidden-file-input-form"
+            >
+                <input
+                    type="file"
+                    id="excel_file_update_matrices_hidden"
+                    name="excel_file" {# Tên input phải là 'excel_file' để import_excel_route nhận diện #}
+                    accept=".xlsx"
+                    required
+                    onchange="document.getElementById('updateMatricesFromExcelForm').submit();"
+                />
+                {# Có thể thêm một hidden input để route import_excel_route biết đây là "cập nhật" thay vì "bắt đầu mới" nếu cần xử lý khác biệt nhẹ #}
+                {# Ví dụ: <input type="hidden" name="import_mode" value="update"> #}
+            </form>
+        </div>
+        {% endif %}
+        <!-- END: NÚT IMPORT EXCEL -->
+                    {% if show_input_forms is true %}
+                    <div class="add-form">
+                      <h3 class="section-heading" style="margin-top: 0">
+                        Thêm Tiêu chí mới
+                      </h3>
+                      <form
+                        method="POST"
+                        action="{{ url_for('add_criteria_route') }}"
+                      >
+                        <label for="criteria_name_add">Tên Tiêu chí:</label> {#
+                        Đổi id để tránh trùng lặp #}
+                        <input
+                          type="text"
+                          id="criteria_name_add"
+                          name="criteria_name"
+                          required
+                        />
+                        <button type="submit">Thêm Tiêu chí</button>
+                      </form>
+                    </div>
+                    <div class="add-form">
+                      <h3 class="section-heading" style="margin-top: 0">
+                        Thêm Phương án mới
+                      </h3>
+                      <form
+                        method="POST"
+                        action="{{ url_for('add_alternative_route') }}"
+                      >
+                        <label for="alternative_name_add">Tên Phương án:</label>
+                        {# Đổi id #}
+                        <input
+                          type="text"
+                          id="alternative_name_add"
+                          name="alternative_name"
+                          required
+                        />
+                        <button type="submit">Thêm Phương án</button>
+                      </form>
+                    </div>
+                    <hr style="margin: 30px 0" />
+                    <form
+                      method="POST"
+                      action="{{ url_for('start_ahp_route') }}"
+                      id="start-ahp-selection-form"
+                    >
+                      <h2 class="section-heading">
+                        Chọn các Tiêu chí (Ít nhất 4)
+                      </h2>
+                      <div
+                        class="container_table selection-group"
+                        style="margin-bottom: 20px"
+                      >
+                        {% if criteria %} {% for criteria_id, criteria_name in
+                        criteria %}
+                        <div class="checkbox-item-container">
+                          <input
+                            type="checkbox"
+                            name="selected_criteria_ids"
+                            value="{{ criteria_id }}"
+                            id="crit-{{ criteria_id }}"
+                          />
+                          <label for="crit-{{ criteria_id }}"
+                            >{{ criteria_name }}</label
+                          >
+                        </div>
+                        {% endfor %} {% else %}
+                        <p>Chưa có tiêu chí nào. Vui lòng thêm mới.</p>
+                        {% endif %}
+                      </div>
+                      <h2 class="section-heading">
+                        Chọn các Phương án (Ít nhất 3)
+                      </h2>
+                      <div
+                        class="container_table selection-group"
+                        style="margin-bottom: 30px"
+                      >
+                        {% if alternatives %} {% for alternative_id,
+                        alternative_name in alternatives %}
+                        <div class="checkbox-item-container">
+                          <input
+                            type="checkbox"
+                            name="selected_alternative_ids"
+                            value="{{ alternative_id }}"
+                            id="alt-{{ alternative_id }}"
+                          />
+                          <label for="alt-{{ alternative_id }}"
+                            >{{ alternative_name }}</label
+                          >
+                          {% if selected_alternative_ids_from_excel and
+                          alternative_id in selected_alternative_ids_from_excel
+                          %}checked{% endif %}> {# THÊM ĐIỀU KIỆN CHECKED CHO
+                          PHƯƠNG ÁN #}
+                        </div>
+                        {% endfor %} {% else %}
+                        <p>Chưa có phương án nào. Vui lòng thêm mới.</p>
+                        {% endif %}
+                      </div>
+                      <h2 class="section-heading">Bắt đầu quy trình AHP</h2>
+                      <button
+                        type="submit"
+                        class="nav-button"
+                        id="btn-start-ahp-main"
+                      >
+                        Bắt đầu AHP & Tính Ma trận Tiêu chí
+                      </button>
+                      <p
+                        id="selection-error-message"
+                        style="color: red; font-weight: bold; margin-top: 10px"
+                      ></p>
+                    </form>
+                    {% endif %}
+
+                    <hr style="margin: 40px 0" />
+
+                    {% if show_ahp_steps is true and show_alternatives_form is
+                    false %}
+                    <div class="container_list" id="criteria-comparison-step">
+                      <div class="grid__row">
+                        <div class="grid_column-12">
+                          <div class="matrix-title">
+                            <h2 class="section-heading">
+                              Bước 1: So sánh cặp cho {{ criteria|length }} Tiêu
+                              chí đã chọn
+                            </h2>
+                          </div>
+
+                          <div class="table-wrapper">
+                            <form
+                              method="POST"
+                              action="{{ url_for('calculate_criteria_route') }}"
+                            >
+                              <table class="comparison-table">
+                                <thead>
+                                  <tr>
+                                    <th>Tiêu chí</th>
+                                    {% for criteria_id, criteria_name in
+                                    criteria %}
+                                    <th>{{ criteria_name }}</th>
+                                    {% endfor %}
+                                  </tr>
+                                </thead>
+                                <tbody id="matrix-body-criteria">
+                                  {% for i in range(criteria|length) %}
+                                  <tr>
+                                    <th>{{ criteria[i][1] }}</th>
+                                    {% for j in range(criteria|length) %}
+                                    <td>
+                                      {% if i == j %} 1
+                                      <input
+                                        type="hidden"
+                                        name="matrix[{{i}}][{{j}}]"
+                                        value="1"
+                                      />
+                                      {% elif i < j %}
+                                      <input
+                                        type="text"
+                                        name="matrix[{{i}}][{{j}}]"
+                                        placeholder="1-9, 1/2..1/9"
+                                        value="{{ form_data_criteria.get('matrix[' ~ i ~ '][' ~ j ~ ']', '') if form_data_criteria else '' }}"
+                                        data-row="{{ i }}"
+                                        data-col="{{ j }}"
+                                        data-matrix-type="criteria"
+                                        required
+                                      />
+                                      <span class="input-error-message"></span>
+                                      {% else %}
+                                      <span
+                                        class="readonly-cell"
+                                        data-row="{{ i }}"
+                                        data-col="{{ j }}"
+                                        data-matrix-type="criteria-inv"
+                                        > </span
+                                      >
+                                      {% endif %}
+                                    </td>
+                                    {% endfor %}
+                                  </tr>
+                                  {% endfor %}
+                                </tbody>
+                              </table>
+                              <button type="submit" class="nav-button">
+                                Tính Trọng số Tiêu chí & Chuyển bước
+                              </button>
+                            </form>
+                          </div>
+                        </div>
+                        <div class="result">
+                          <p>
+                            <b>Hướng dẫn:</b> <br />
+                            - Nhập <b>số nguyên từ 1 đến 9</b> (nếu tiêu chí
+                            hàng <i>quan trọng hơn</i> tiêu chí cột). <br />
+                            - Nhập <b>phân số dạng 1/n</b> (với n từ 2 đến 9, ví
+                            dụ: 1/2, 1/3, ..., 1/9) (nếu tiêu chí hàng
+                            <i>kém quan trọng hơn</i> tiêu chí cột).<br />
+                            - Các ô phía trên đường chéo chính sẽ được nhập. Hệ
+                            thống tự điền giá trị nghịch đảo vào các ô phía
+                            dưới.<br />
+                            <b>Hướng dẫn Excel </b>
+                            <br />
+                            - File phải là <code>.xlsx</code>. Sheet đầu tiên sẽ
+                            được sử dụng.
+                            <br />
+                            - <b>Hàng 17 (từ cột B trở đi):</b> Chứa tên các
+                            tiêu chí <b>đã chọn</b>, theo đúng thứ tự hiển thị
+                            trong bảng ma trận bên dưới.<br />
+                            (Ví dụ: B17, C17, D17,... là tên các tiêu chí)<br />
+                            - <b>Cột A (từ hàng 18 đến hàng 24):</b> Chứa tên
+                            các tiêu chí <b>đã chọn</b>, theo đúng thứ tự.<br />
+                            (Ví dụ: A18, A19, A20,... là tên các tiêu chí)<br />
+                            - <b>Dữ liệu so sánh cặp:</b> Bắt đầu từ ô
+                            <b>B18</b> (tương ứng với tiêu chí ở B17 và A18).
+                            Chỉ các giá trị ở nửa trên đường chéo sẽ được đọc để
+                            điền vào form.<br />
+                            (Ví dụ: C18 là so sánh giữa tiêu chí ở C17 và A18;
+                            D18 là so sánh giữa D17 và A18, v.v.).<br />
+                            - Giá trị hợp lệ: số nguyên từ 1 đến 9, hoặc phân số
+                            dạng 1/2, 1/3, ..., 1/9.
+                          </p>
+                          <h4
+                            style="
+                              margin-top: 20px;
+                              margin-bottom: 10px;
+                              text-align: left;
+                            "
+                          >
+                            Thang đo Saaty tham khảo:
+                          </h4>
+                          <table
+                            class="comparison-table"
+                            style="
+                              width: auto;
+                              margin-left: 0;
+                              margin-bottom: 15px;
+                              font-size: 0.9em;
+                            "
+                          >
+                            <thead>
+                              <tr>
+                                <th>Mức độ ưu tiên</th>
+                                <th>Giá trị số</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td>Ưu tiên bằng nhau</td>
+                                <td>1</td>
+                              </tr>
+                              <tr>
+                                <td>Ưu tiên bằng nhau cho đến vừa phải</td>
+                                <td>2</td>
+                              </tr>
+                              <tr>
+                                <td>Ưu tiên vừa phải</td>
+                                <td>3</td>
+                              </tr>
+                              <tr>
+                                <td>Ưu tiên vừa phải cho đến hơi ưu tiên</td>
+                                <td>4</td>
+                              </tr>
+                              <tr>
+                                <td>Hơi ưu tiên hơn</td>
+                                <td>5</td>
+                              </tr>
+                              <tr>
+                                <td>Hơi ưu tiên hơn cho đến rất ưu tiên</td>
+                                <td>6</td>
+                              </tr>
+                              <tr>
+                                <td>Rất ưu tiên</td>
+                                <td>7</td>
+                              </tr>
+                              <tr>
+                                <td>Rất ưu tiên cho đến vô cùng ưu tiên</td>
+                                <td>8</td>
+                              </tr>
+                              <tr>
+                                <td>Vô cùng ưu tiên</td>
+                                <td>9</td>
+                              </tr>
+                              <tr>
+                                <td
+                                  colspan="2"
+                                  style="text-align: center; font-style: italic"
+                                >
+                                  Giá trị nghịch đảo (1/2 đến 1/9) được sử dụng
+                                  cho so sánh ngược lại.
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- START: Kết quả Tiêu chí & Ma trận so sánh PHƯƠNG ÁN (Bước 2) -->
+                    {% if criteria_results %} {# Luôn hiển thị kết quả TC nếu có
+                    #}
+                    <hr style="margin: 40px 0" />
+                    <div
+                      class="container_list ahp-results-summary"
+                      id="criteria-results-summary"
+                    >
+                      <h2 class="section-heading">
+                        Kết quả Bước 1: Trọng số Tiêu chí
+                      </h2>
+                      {% if criteria_results.error %}
+                      <p style="color: red; text-align: center">
+                        <strong>Lỗi tính toán ma trận tiêu chí:</strong> {{
+                        criteria_results.error }}
+                      </p>
+                      {% elif sorted_criteria_with_weights_for_template %} {# SỬ
+                      DỤNG BIẾN MỚI NÀY #}
+                      <table style="margin-bottom: 10px">
+                        <thead>
+                          <tr>
+                            <th>Tiêu chí</th>
+                            <th>Trọng số</th>
+                            <th>Xếp hạng</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for weight, crit_tuple in
+                          sorted_criteria_with_weights_for_template %} {#
+                          crit_tuple là (crit_id, crit_name) #}
+                          <tr>
+                            <th>{{ crit_tuple[1] }}</th>
+                            {# Tên tiêu chí #}
+                            <td>{{ weight|float|round(4) }}</td>
+                            <td>{{ loop.index }}</td>
+                          </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                      <p style="text-align: center">
+                        CR Tiêu chí:
+                        <strong>
+                          {% if criteria_results.CR is number %} {{
+                          criteria_results.CR|float|round(4) }} {% else %} {{
+                          criteria_results.CR|default('Không tính được', true)
+                          }} {% endif %}
+                        </strong>
+                        ({% if criteria_results.is_consistent is true %}
+                        <span style="color: green">Nhất quán</span> {% elif
+                        criteria_results.is_consistent is sameas false %}
+                        <span style="color: red"
+                          >Không nhất quán (CR > 0.1 hoặc có lỗi)</span
+                        >
+                        {% else %}
+                        <span style="color: orange"
+                          >Trạng thái không xác định</span
+                        >
+                        {% endif %})
+                      </p>
+                      {% else %}
+                      <p style="text-align: center">
+                        Chưa có kết quả tính toán cho ma trận tiêu chí.
+                      </p>
+                      {% endif %}
+                    </div>
+
+                    {% if show_alternatives_form is true and criteria_results
+                    and criteria_results.is_consistent is true %}
+                    <hr style="margin: 40px 0" />
+                    <div class="matrix-title">
+                      <h2 class="section-heading">
+                        Bước 2: So sánh cặp cho {{ alternatives|length }} Phương
+                        án theo từng Tiêu chí
+                      </h2>
+                      <p>
+                        Nhập giá trị so sánh (số nguyên 1-9 hoặc phân số 1/2 đến
+                        1/9) cho các ô phía trên đường chéo.
+                      </p>
+                    </div>
+
+                    <form
+                      method="POST"
+                      action="{{ url_for('calculate_final_route') }}"
+                    >
+                      {% for crit_idx in range(criteria|length) %} {% set
+                      current_criterion_id, current_criterion_name =
+                      criteria[crit_idx] %}
+                      <div
+                        class="sub-matrix-section"
+                        style="
+                          margin-bottom: 30px;
+                          padding: 20px;
+                          border: 1px solid #ddd;
+                          border-radius: 5px;
+                          background-color: #f0f0f0;
+                        "
+                      >
+                        <h3 style="margin-top: 0">
+                          Tiêu chí: {{ current_criterion_name }}
+                        </h3>
+                        <div class="table-wrapper">
+                          
+                          <table class="comparison-table">
+                            <thead>
+                              <tr>
+                                <th>Phương Án</th>
+                                {% for alt_id, alt_name in alternatives %}
+                                <th>{{ alt_name }}</th>
+                                {% endfor %}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {% for i in range(alternatives|length) %}
+                              <tr>
+                                <th>{{ alternatives[i][1] }}</th>
+                                {% for j in range(alternatives|length) %}
+                                <td>
+                                  {% if i == j %} 1
+                                  <input
+                                    type="hidden"
+                                    name="alt_matrix[{{crit_idx}}][{{i}}][{{j}}]"
+                                    value="1"
+                                  />
+                                  {% elif i < j %}
+                                  <input
+                                    type="text"
+                                    name="alt_matrix[{{crit_idx}}][{{i}}][{{j}}]"
+                                    placeholder="1-9, 1/2..1/9"
+                                    value="{{ form_data_alternatives.get('alt_matrix[' ~ crit_idx ~ '][' ~ i ~ '][' ~ j ~ ']', '') if form_data_alternatives else '' }}"
+                                    data-row="{{ i }}"
+                                    data-col="{{ j }}"
+                                    data-crit-idx="{{ crit_idx }}"
+                                    data-matrix-type="alternatives"
+                                    required
+                                  />
+                                  <span class="input-error-message"></span>
+                                  {% else %}
+                                  <span
+                                    class="readonly-cell"
+                                    data-row="{{ i }}"
+                                    data-col="{{ j }}"
+                                    data-crit-idx="{{ crit_idx }}"
+                                    data-matrix-type="alternatives-inv"
+                                    > </span
+                                  >
+                                  {% endif %}
+                                </td>
+                                {% endfor %}
+                              </tr>
+                              {% endfor %}
+                            </tbody>
+                          </table>
+                        </div>
+                        {# Hiển thị CR của ma trận PA con #} {% if
+                        alternative_crs is not none and crit_idx in
+                        alternative_crs %} {% set alt_result_detail =
+                        alternative_crs.get(crit_idx) %} {# Lấy dictionary kết
+                        quả cho crit_idx này #} {% if alt_result_detail and not
+                        alt_result_detail.get('error') %} {# Chỉ hiển thị bảng
+                        chi tiết nếu không có lỗi và có dữ liệu tính toán #} {%
+                        if alt_result_detail.get('weights') and
+                        alt_result_detail.get('wsv') and
+                        alt_result_detail.get('cv') %}
+                        
+                        <h4 style="text-align: center; margin-top: 20px">
+                          Chi tiết AHP cho Phương án (TC: {{
+                          current_criterion_name }})
+                        </h4>
+                        <table
+                          class="comparison-table"
+                          style="
+                            margin: 10px auto;
+                            width: auto;
+                            font-size: 0.9em;
+                          "
+                        >
+                          <thead>
+                            <tr>
+                              <th>Phương án</th>
+                              <th>Sum Weight (WSV)</th>
+                              {# Weighted Sum Vector #}
+                              <th>Trọng số Phương án</th>
+                              {# Weights #}
+                              <th>Consistency Vector (CV)</th>
+                              {# cv #}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {# `alternatives` là list of tuples (id, name)
+                            truyền từ Python #} {% for i in
+                            range(alternatives|length) %}
+                            <tr>
+                              <td>{{ alternatives[i][1] }}</td>
+                              {# Tên phương án #}
+                              <td>
+                                {{ alt_result_detail.wsv[i]|float|round(4) if
+                                alt_result_detail.wsv[i] is number else 'N/A' }}
+                              </td>
+                              <td>
+                                {{ alt_result_detail.weights[i]|float|round(4)
+                                if alt_result_detail.weights[i] is number else
+                                'N/A' }}
+                              </td>
+                              <td>
+                                {{ alt_result_detail.cv[i]|float|round(4) if
+                                alt_result_detail.cv[i] is number else 'N/A' }}
+                              </td>
+                            </tr>
+                            {% endfor %}
+                          </tbody>
+                        </table>
+                        <div
+                          style="
+                            text-align: center;
+                            margin-top: 5px;
+                            font-size: 0.85em;
+                          "
+                        >
+                          <p>
+                            <strong>Lambda_max:</strong> {{
+                            alt_result_detail.lambdaMax|float|round(4) if
+                            alt_result_detail.lambdaMax is number else 'N/A' }}
+                          </p>
+                          <p>
+                            <strong>CI:</strong> {{
+                            alt_result_detail.ci|float|round(4) if
+                            alt_result_detail.ci is number else 'N/A' }}
+                          </p>
+                          <p>
+                            <strong>CR:</strong>
+                            <strong>
+                              {% if alt_result_detail.CR is number %} {{
+                              alt_result_detail.CR|float|round(4) }} {% elif
+                              alt_result_detail.CR %} {# Xử lý trường hợp CR là
+                              chuỗi lỗi #}
+                              <span style="color: red"
+                                >{{ alt_result_detail.CR }}</span
+                              >
+                              {% else %} N/A {% endif %}
+                            </strong>
+                            {% if alt_result_detail.CR is number %} {# Chỉ hiển
+                            thị (Nhất quán) nếu CR là số #} {% if
+                            alt_result_detail.is_consistent is true %}
+                            <span style="color: green">(Nhất quán)</span> {%
+                            elif alt_result_detail.is_consistent is sameas false
+                            %}
+                            <span style="color: red">(Không nhất quán)</span> {%
+                            else %}
+                            <span style="color: orange">(Trạng thái N/A)</span>
+                            {% endif %} {% endif %}
+                          </p>
+                          {% if alt_result_detail.ri is number %}
+                          <p>
+                            <strong>RI:</strong> {{
+                            alt_result_detail.ri|float|round(2) }} (cho n={{
+                            alt_result_detail.n }})
+                          </p>
+                          {% endif %}
+                        </div>
+                        {% elif alt_result_detail.get('CR') == "Lỗi nhập liệu"
+                        %} {# Trường hợp lỗi nhập liệu đã được gán vào CR #}
+                        <p
+                          style="
+                            text-align: center;
+                            margin-top: 10px;
+                            color: red;
+                          "
+                        >
+                          <strong
+                            >Lỗi nhập liệu cho Phương án (TC: "{{
+                            current_criterion_name }}")</strong
+                          >
+                        </p>
+                        {% else %}
+                        <p style="text-align: center; margin-top: 10px">
+                          Chưa có dữ liệu tính toán chi tiết cho Phương án (TC: "{{
+                          current_criterion_name }}").
+                        </p>
+                        {% endif %} {# End if weights, wsv, cv exist #} {% elif
+                        alt_result_detail and alt_result_detail.get('error') %}
+                        <p
+                          style="
+                            text-align: center;
+                            margin-top: 10px;
+                            color: red;
+                          "
+                        >
+                          <strong
+                            >Lỗi tính toán cho Phương án (TC: "{{
+                            current_criterion_name }}"):</strong
+                          >
+                          {{ alt_result_detail.error }}
+                        </p>
+                        {% endif %} {# End if alt_result_detail and not error #}
+                        {% endif %} {# End if alternative_crs and crit_idx in it
+                        #}
+                      </div>
+                      {# End .sub-matrix-section #} {% endfor %}
+                      <button
+                        type="submit"
+                        class="nav-button"
+                        style="margin-top: 20px"
+                      >
+                        Tính Điểm Cuối cùng & Xem Kết quả
+                      </button>
+                    </form>
+                    {% elif criteria_results and criteria_results.is_consistent
+                    is false %}
+                    <hr style="margin: 40px 0" />
+                    <p
+                      style="text-align: center; color: red; font-weight: bold"
+                    >
+                      Ma trận tiêu chí không nhất quán. Vui lòng sửa lại ma trận
+                      tiêu chí ở Bước 1.
+                    </p>
+                    {% endif %} {# End if show_alternatives_form is true and
+                    criteria_results.is_consistent is true #} {% endif %} {# End
+                    if criteria_results #}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <footer>
+        Bản quyền thuộc về Nhóm 12 - Phát triển hệ thống thông tin
+      </footer>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        function validateAndParseSaatyInputJS(valueStr) {
+          valueStr = String(valueStr).trim().replace(",", "."); // Chuyển thành chuỗi và chuẩn hóa
+          if (valueStr === "")
+            return {
+              valid: false,
+              value: NaN,
+              error: "Giá trị không được để trống.",
+            };
+
+          if (valueStr.includes("/")) {
+            const parts = valueStr.split("/");
+            if (parts.length === 2) {
+              const numStr = parts[0].trim();
+              const denStr = parts[1].trim();
+              if (numStr === "1") {
+                if (denStr.length === 1 && "23456789".includes(denStr)) {
+                  const den = parseInt(denStr, 10);
+                  return {
+                    valid: true,
+                    value: 1 / den,
+                    isFraction: true,
+                    denominator: den,
+                    error: "",
+                  };
+                }
+              }
+            }
+            return {
+              valid: false,
+              value: NaN,
+              error: "Phân số sai. Chỉ chấp nhận 1/2 đến 1/9.",
+              isFraction: true,
+            };
+          } else {
+            // Xử lý số (nguyên hoặc thập phân)
+            const num = parseFloat(valueStr);
+            if (isNaN(num)) {
+              // Nếu không phải là số hợp lệ sau khi parse
+              return {
+                valid: false,
+                value: NaN,
+                error: "Giá trị không phải là số hợp lệ.",
+                isFraction: false,
+              };
+            }
+            // Kiểm tra số nguyên từ 1 đến 9
+            if (Number.isInteger(num) && num >= 1 && num <= 9) {
+              return { valid: true, value: num, isFraction: false, error: "" };
+            }
+
+            // KIỂM TRA MỚI: Chấp nhận các giá trị float tương ứng với phân số Saaty
+            const saatyReciprocals = {
+              0.5: 2, // 1/2
+              0.33333333: 3, // ~1/3 (cần cẩn thận với so sánh float)
+              0.3333333: 3,
+              0.333333: 3,
+              0.33333: 3,
+              0.3333: 3,
+              0.333: 3,
+              0.25: 4, // 1/4
+              0.2: 5, // 1/5
+              0.16666667: 6, // ~1/6
+              0.1666667: 6,
+              0.166667: 6,
+              0.16667: 6,
+              0.1667: 6,
+              0.14285714: 7, // ~1/7
+              0.1428571: 7,
+              0.142857: 7,
+              0.125: 8, // 1/8
+              0.11111111: 9, // ~1/9
+              // Thêm các giá trị làm tròn khác nếu cần, hoặc dùng epsilon để so sánh
+            };
+
+            // Tìm giá trị float gần nhất (cần làm tròn valueStr hoặc num để so sánh chính xác)
+            // Ví dụ: Làm tròn giá trị nhập vào đến 7 chữ số thập phân để so sánh
+            const roundedNum = parseFloat(num.toFixed(7));
+            // console.log("Input:", valueStr, "Parsed num:", num, "Rounded num for check:", roundedNum);
+
+            if (saatyReciprocals.hasOwnProperty(roundedNum)) {
+              // console.log("Matched Saaty reciprocal:", roundedNum, " maps to 1/", saatyReciprocals[roundedNum]);
+              return {
+                valid: true,
+                value: roundedNum,
+                isFraction: false,
+                isSaatyFloat: true,
+                denominator: saatyReciprocals[roundedNum],
+                error: "",
+              };
+            }
+
+            // Nếu không phải số nguyên 1-9 và cũng không phải float Saaty hợp lệ
+            if (Number.isInteger(num)) {
+              // Nếu là số nguyên nhưng ngoài khoảng 1-9
+              return {
+                valid: false,
+                value: NaN,
+                error: "Số nguyên sai. Chỉ chấp nhận 1 đến 9.",
+                isFraction: false,
+              };
+            } else {
+              // Nếu là số thập phân không hợp lệ
+              return {
+                valid: false,
+                value: NaN,
+                error:
+                  "Giá trị thập phân không tương ứng thang Saaty (vd: 0.25, 0.5). Chỉ chấp nhận số nguyên 1-9 hoặc phân số 1/2-1/9.",
+                isFraction: false,
+              };
+            }
+          }
+        }
+
+        function handleSaatyInputChange(inputElement) {
+          const validationResult = validateAndParseSaatyInputJS(
+            inputElement.value
+          );
+          const row = parseInt(inputElement.dataset.row, 10);
+          const col = parseInt(inputElement.dataset.col, 10);
+          const matrixType = inputElement.dataset.matrixType;
+
+          let inverseCellSelector;
+          let inverseMatrixTypeSuffix =
+            matrixType === "criteria" ? "criteria-inv" : "alternatives-inv";
+
+          if (matrixType === "criteria") {
+            inverseCellSelector = `span[data-matrix-type='${inverseMatrixTypeSuffix}'][data-row='${col}'][data-col='${row}']`;
+          } else if (matrixType === "alternatives") {
+            const critIdx = inputElement.dataset.critIdx;
+            inverseCellSelector = `span[data-matrix-type='${inverseMatrixTypeSuffix}'][data-crit-idx='${critIdx}'][data-row='${col}'][data-col='${row}']`;
+          } else {
+            return;
+          }
+
+          const tableBody = inputElement.closest("tbody, .sub-matrix-section"); // Tìm trong tbody hoặc section cha
+          const inverseCell = tableBody
+            ? tableBody.querySelector(inverseCellSelector)
+            : null;
+          const errorSpan = inputElement.nextElementSibling; // Giả sử span lỗi nằm ngay sau input
+
+          if (!validationResult.valid) {
+            if (
+              errorSpan &&
+              errorSpan.classList.contains("input-error-message")
+            ) {
+              errorSpan.textContent = validationResult.error;
+            }
+            if (inverseCell) inverseCell.textContent = ""; // Xóa nghịch đảo nếu lỗi
+            // inputElement.setCustomValidity(validationResult.error); // Tùy chọn: dùng validation mặc định của trình duyệt
+            return;
+          } else {
+            if (
+              errorSpan &&
+              errorSpan.classList.contains("input-error-message")
+            ) {
+              errorSpan.textContent = ""; // Xóa thông báo lỗi nếu hợp lệ
+            }
+            // inputElement.setCustomValidity("");
+          }
+
+          if (inverseCell) {
+            if (validationResult.isFraction) {
+              inverseCell.textContent = validationResult.denominator.toString();
+            } else {
+              if (validationResult.value === 1) {
+                inverseCell.textContent = "1";
+              } else if (
+                validationResult.value >= 2 &&
+                validationResult.value <= 9
+              ) {
+                inverseCell.textContent = `1/${validationResult.value}`;
+              } else {
+                // Trường hợp này không nên xảy ra với validation hiện tại
+                inverseCell.textContent = (1 / validationResult.value).toFixed(
+                  3
+                );
+              }
+            }
+          }
+        }
+
+        document
+          .querySelectorAll(
+            "input[data-matrix-type='criteria'], input[data-matrix-type='alternatives']"
+          )
+          .forEach((input) => {
+            input.addEventListener("input", function () {
+              handleSaatyInputChange(this);
+            });
+            // Kích hoạt kiểm tra và điền nghịch đảo khi tải trang cho các giá trị đã có (từ form_data)
+            if (input.value.trim() !== "") {
+              handleSaatyInputChange(input);
+            }
+          });
+
+        const startAhpForm = document.getElementById(
+          "start-ahp-selection-form"
+        );
+        const selectionErrorMessageElement = document.getElementById(
+          "selection-error-message"
+        );
+
+        if (startAhpForm) {
+          startAhpForm.addEventListener("submit", function (event) {
+            const selectedCriteriaCount = document.querySelectorAll(
+              'input[name="selected_criteria_ids"]:checked'
+            ).length;
+            const selectedAlternativesCount = document.querySelectorAll(
+              'input[name="selected_alternative_ids"]:checked'
+            ).length;
+            let errorMessages = [];
+
+            if (selectedCriteriaCount < 4) {
+              // Yêu cầu cũ
+              errorMessages.push("Cần chọn ít nhất 4 tiêu chí.");
+            }
+            if (selectedAlternativesCount < 3) {
+              // Yêu cầu cũ
+              errorMessages.push("Cần chọn ít nhất 3 phương án.");
+            }
+
+            if (errorMessages.length > 0) {
+              event.preventDefault();
+              if (selectionErrorMessageElement) {
+                selectionErrorMessageElement.innerHTML =
+                  errorMessages.join("<br>"); // Dùng <br> nếu muốn xuống dòng
+              }
+              // alert(errorMessages.join('\n')); // Alert vẫn dùng \n
+            } else {
+              if (selectionErrorMessageElement) {
+                selectionErrorMessageElement.textContent = "";
+              }
+            }
+          });
+        }
+      });
+    </script>
+  </body>
+</html>

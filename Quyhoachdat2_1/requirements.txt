@@ -1,0 +1,8 @@
+Flask
+numpy
+matplotlib
+seaborn
+openpyxl
+reportlab
+pandas
+requests    

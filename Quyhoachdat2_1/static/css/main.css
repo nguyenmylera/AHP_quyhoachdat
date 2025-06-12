@@ -1,0 +1,359 @@
+.app_container {
+  display: flex;
+  height: 100vh;
+  margin-top: 0;
+  padding-top: 70px;
+}
+
+.content {
+  flex: 1;
+  margin-left: 250px;
+  padding: 20px;
+  background-color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: calc(100vh - 70px);
+  overflow-x: auto;
+}
+
+.hidden {
+  display: none;
+}
+.button-container {
+  text-align: right;
+  margin-top: 20px;
+}
+/* Header */
+header {
+  background-color: #005555;
+  color: rgba(255, 255, 255, 0.8);
+  padding: 20px;
+
+  font-size: 1.8rem;
+  font-weight: bold;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 70px;
+  line-height: 30px;
+  z-index: 1000;
+}
+
+/* Sidebar */
+.sidebar {
+  background-color: #216161;
+  border-right: 1px solid #ddd;
+  padding: 20px;
+  width: 250px;
+  height: calc(100vh - 70px);
+  position: fixed;
+  top: 70px;
+  left: 0;
+  overflow-y: auto;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebar ul li {
+  margin: 10px 0;
+}
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.sidebar ul li a {
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.5);
+  padding: 10px;
+  display: block;
+  transition: background-color 0.3s;
+  margin: 0;
+  font-size: 13px;
+}
+
+.sidebar ul li a:hover {
+  background-color: #c7bec042;
+}
+
+/* Footer */
+footer {
+  background-color: #005555;
+  color: rgba(255, 255, 255, 0.8);
+  text-align: center;
+  padding: 15px;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  font-size: 14px;
+  font-weight: 550;
+}
+
+/* Div to chứa toàn web */
+.container {
+  width: 1250px;
+  max-width: 1500px;
+  padding: 20px;
+  margin: 0 auto;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.section-heading {
+  font-size: 2rem;
+  text-align: left;
+  color: #005555;
+  margin-bottom: 10px;
+}
+.container_table {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.form-group {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 100px;
+  flex: 1;
+}
+label {
+  font-size: 14px;
+}
+.input-choose {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 1.4rem;
+  text-align: center;
+  margin-top: 24px;
+}
+
+.comparison-table th,
+.comparison-table td {
+  border: 1px solid #33333345;
+  padding: 8px;
+  
+}
+
+.comparison-table th {
+  background-color: #87c5c5d1;
+  font-weight: bold;
+}
+
+.comparison-table td input {
+  width: 60px;
+  padding: 4px;
+  font-size: 1.3rem;
+  text-align: center;
+}
+
+.comparison-table .diagonal {
+  background-color: #8bbcbcd1;
+  font-weight: bold;
+  color: #c6003b;
+}
+
+/* button Sum */
+.sum-button {
+  padding: 8px 16px;
+  font-size: 1.4rem;
+  background-color: #005555;
+  color: rgba(255, 255, 255, 0.8);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background-color 0.3s ease;
+}
+
+.sum-button:hover {
+  background-color: #005555d3;
+}
+
+.highlight-row th {
+  background-color: #005555;
+  font-weight: bold;
+  color: #c6003b;
+}
+.button-group {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: center;
+  margin-top: 16px;
+  margin-bottom: 10px;
+}
+
+.btn-group {
+  display: flex;
+  gap: 10px;
+}
+.weights-sum,
+.consistency-vector,
+.CI,
+.lamda,
+.CR {
+  width: 100px;
+  height: 90px;
+  text-align: center;
+  outline: 0;
+  color: #333;
+}
+.weights-sum-total,
+.consistency-vector-total,
+.lamda-total,
+.CI-total,
+.CR-total {
+  width: 90px;
+  height: 90px;
+  background-color: #005555;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 600;
+  line-height: 22px;
+  cursor: pointer;
+  border: 2px solid var(--border--color);
+}
+/* CSS cho 2 nút prev và next */
+.button-container {
+  display: flex;
+  justify-content: flex-end;
+  position: fixed;
+  bottom: 60px;
+  right: 20px;
+  z-index: 1000;
+}
+
+/* CSS cho các nút */
+.nav-button {
+  background-color: #005555;
+  color: rgba(255, 255, 255, 0.8);
+  border: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  margin-left: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.nav-button:hover {
+  background-color: #005555e8;
+  transform: scale(1.05);
+}
+
+.input-wrapper {
+  position: relative;
+}
+
+.input-text {
+  width: 100%;
+  padding: 10px 40px 10px 20px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  margin-bottom: 10px;
+}
+
+.icon {
+  position: absolute;
+  right: 10px;
+  top: 40%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #333;
+  font-size: 14px;
+}
+
+.result {
+  margin-top: 10px;
+  font-size: 14px;
+  color: red;
+}
+p {
+  line-height: 25px;
+}
+@media (max-width: 1024px) {
+  .content {
+    margin-left: 0;
+    padding: 15px;
+  }
+
+  .sidebar {
+    position: relative;
+    width: 100%;
+    height: auto;
+    top: 0;
+  }
+
+  .container {
+    padding: 10px;
+  }
+}
+
+@media (max-width: 768px) {
+  .comparison-table {
+    font-size: 1.1rem;
+    overflow-x: auto;
+  }
+
+  .form-group {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .sum-button,
+  .nav-button {
+    font-size: 1.2rem;
+    padding: 6px 12px;
+  }
+
+  .grid {
+    width: 100%;
+    padding: 0 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .comparison-table td input {
+    width: 40px;
+    font-size: 1rem;
+  }
+
+  .weights-sum,
+  .consistency-vector,
+  .CI,
+  .lamda,
+  .CR {
+    width: 70px;
+    height: 70px;
+    font-size: 1rem;
+  }
+
+  .weights-sum-total,
+  .consistency-vector-total,
+  .lamda-total,
+  .CI-total,
+  .CR-total {
+    width: 70px;
+    height: 70px;
+    font-size: 1rem;
+  }
+}
+/* result */
+
+
+
+

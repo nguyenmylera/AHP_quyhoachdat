@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kết quả Phân tích AHP</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+    <style>
+        /* CSS ĐẶC THÙ TRONG FILE NÀY - NÊN CHUYỂN VÀO MAIN.CSS NẾU CÓ THỂ */
+        .ahp-sub-detail-table th.header-alt-name { background-color: #cce5ff; color: #004085; } 
+        .ahp-sub-detail-table th.header-wsv { background-color: #d4edda; color: #155724; } 
+        .ahp-sub-detail-table th.header-weight { background-color: #fff3cd; color: #856404; } 
+        .ahp-sub-detail-table th.header-cv { background-color: #f8d7da; color: #721c24; } 
+        .ahp-sub-detail-table td.alt-name-cell { 
+            font-weight: bold; background-color: #f0f2f5; 
+            text-align: left; padding-left:15px; color: #495057;
+        } 
+        .status-consistent { color: #28a745; font-weight: bold; }
+        .status-inconsistent { color: #dc3545; font-weight: bold; }
+        .flash-messages { list-style: none; padding: 0; margin: 15px 0; }
+        .flash-messages li { 
+            padding: 12px 18px; margin-bottom: 10px; border-radius: 5px; 
+            word-wrap: break-word; white-space: pre-wrap; font-size: 0.95em;
+            border: 1px solid transparent; 
+        }
+        .flash-messages li.success { background-color: #d4edda; color: #155724; border-color: #c3e6cb; }
+        .flash-messages li.error { background-color: #f8d7da; color: #721c24; border-color: #f5c6cb; }
+        .flash-messages li.warning { background-color: #fff3cd; color: #856404; border-color: #ffeeba; }
+        .flash-messages li.info { background-color: #d1ecf1; color: #0c5060; border-color: #bee5eb; }
+
+         .result-table td.highlight { background-color: #fff3cd; font-weight: bold; }
+         .result-table th.highlight-header { font-weight: bold; }
+
+        .result-table-section { 
+            padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; 
+            background-color: #ffffff; box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
+            margin-bottom: 30px; 
+        }
+        .result-table-section h3 { 
+            margin-top: 0; text-align: center; color: #005555; 
+            font-size: 1.6rem; margin-bottom: 20px; 
+        }
+         .result-table-section h4 { 
+            text-align:left; margin-bottom:10px; color:#333; 
+            font-size:1.2rem;
+        }
+        .formula-note { 
+            text-align: center; font-style: italic; color: #555; 
+            margin: 25px auto 35px auto; padding:12px 18px; background-color:#f0f8ff; 
+            border-left: 4px solid #005555; border-radius: 4px; max-width: 85%; 
+        }
+        .nav-button-container { 
+            text-align: center; margin-top: 30px; margin-bottom: 20px;
+            display:flex; justify-content:center; gap: 15px; 
+        }
+        .charts-container { display: flex; flex-wrap: wrap; justify-content: space-around; gap: 20px; margin-top: 20px; }
+        .chart-item { text-align: center; flex: 1; min-width: 300px; max-width: 48%; }
+        .chart-item img { max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 4px; margin-top: 10px; }
+        .chart-item h4 { font-size: 1.1rem; color: #333; margin-bottom: 5px; }
+        .sub-matrix-details { margin-bottom: 30px; padding-top: 15px; }
+        .sub-matrix-details.bordered-top { border-top: 1px dashed #ddd; } /* Class mới cho border-top */
+    </style>
+</head>
+<body>
+    <header>
+        HỆ THỐNG HỖ TRỢ RA QUYẾT ĐỊNH VỀ QUY HOẠCH VÀ PHÂN BỔ ĐẤT ĐAI
+    </header>
+
+    <div class="app_container">
+        <aside class="sidebar">
+            <ul>
+                <li><a href="{{ url_for('home') }}">Trang chủ</a></li>
+                <li><a href="{{ url_for('history_list_route') }}">Lịch sử Phân tích</a></li>
+            </ul>
+        </aside>
+
+        <main class="content"> 
+            <div class="container"> 
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <ul class="flash-messages">
+                        {% for category, message in messages %}
+                            <li class="{{ category }}">{{ message }}</li>
+                        {% endfor %}
+                        </ul>
+                    {% endif %}
+                {% endwith %}
+
+                <h1 class="section-heading" style="text-align:center; font-size: 2rem; margin-bottom:20px;">
+                    Tổng hợp Kết quả phân tích AHP
+                </h1>
+
+                <!-- PHẦN HIỂN THỊ BIỂU ĐỒ -->
+                {% if charts %}
+                    <section class="result-table-section">
+                        <h3><i class="fas fa-chart-bar" style="color: #005555;"></i> Trực quan hóa kết quả</h3>
+                        <div class="charts-container">
+                            {% if charts.criteria_weights_chart_file %}
+                                <div class="chart-item">
+                                    <h4>Trọng số các Tiêu chí</h4>
+                                    <img src="{{ url_for('static', filename='generated_charts/' ~ charts.criteria_weights_chart_file) }}" alt="Biểu đồ trọng số tiêu chí">
+                                </div>
+                            {% endif %}
+                            {% if charts.final_scores_chart_file %}
+                                <div class="chart-item">
+                                    <h4>Điểm số và Xếp hạng Phương án</h4>
+                                    <img src="{{ url_for('static', filename='generated_charts/' ~ charts.final_scores_chart_file) }}" alt="Biểu đồ điểm số phương án">
+                                </div>
+                             {% endif %}
+                         </div> <!-- Đóng div.charts-container -->
+                        
+                    </section>
+                {% endif %}
+
+                <!-- PHẦN 0: Chi tiết AHP của Ma trận Phương án theo từng Tiêu chí -->
+                {% if alternative_crs and criteria_names and alternatives %}
+                    <section class="result-table-section"> 
+                        <h3 style="color:#005555;">Phân tích chi tiết Phương án theo từng Tiêu chí</h3>
+                        {% for crit_idx_str, alt_ahp_detail_dict in alternative_crs.items() %}
+                            {% set crit_idx = crit_idx_str|int %}
+                            {% set current_criterion_name = criteria_names[crit_idx] if criteria_names and crit_idx < criteria_names|length else "Tiêu chí " ~ (crit_idx + 1) %}
+                            
+                            {# SỬA LỖI Ở ĐÂY: Thẻ div.sub-matrix-details bao trọn vẹn một khối chi tiết #}
+                            <div class="sub-matrix-details {% if not loop.first %}bordered-top{% endif %}"> 
+                                <h4><i class="fas fa-cogs" style="color: #005555;"></i> Chi tiết cho Tiêu chí: <strong>{{ current_criterion_name }}</strong></h4>
+                                
+                                {% if alt_ahp_detail_dict and alt_ahp_detail_dict.get('error') is none %}
+                                    {% if alt_ahp_detail_dict.get('weights') is not none and alt_ahp_detail_dict.get('wsv') is not none and alt_ahp_detail_dict.get('cv') is not none %}
+                                        <table class="comparison-table ahp-sub-detail-table" style="margin-bottom:10px; font-size: 1.1rem;">
+                                            <thead>
+                                                <tr>
+                                                    <th class="header-alt-name">Phương án (TC: {{current_criterion_name}})</th>
+                                                    <th class="header-wsv">Sum Weight (WSV)</th>
+                                                    <th class="header-weight">Trọng số Phương án (Local Weight)</th>
+                                                    <th class="header-cv">Consistency Vector (CV)</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for i in range(alternatives|length) %}
+                                                <tr>
+                                                    <td class="alt-name-cell">{{ alternatives[i] }}</td>
+                                                    <td>{{ alt_ahp_detail_dict.wsv[i]|float|round(4) if alt_ahp_detail_dict.wsv and i < alt_ahp_detail_dict.wsv|length and alt_ahp_detail_dict.wsv[i] is number else 'N/A' }}</td>
+                                                    <td>{{ alt_ahp_detail_dict.weights[i]|float|round(4) if alt_ahp_detail_dict.weights and i < alt_ahp_detail_dict.weights|length and alt_ahp_detail_dict.weights[i] is number else 'N/A' }}</td>
+                                                    <td>{{ alt_ahp_detail_dict.cv[i]|float|round(4) if alt_ahp_detail_dict.cv and i < alt_ahp_detail_dict.cv|length and alt_ahp_detail_dict.cv[i] is number else 'N/A' }}</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                        <div style="text-align: center; font-size: 0.95em; padding: 8px; background-color: #f0f2f5; border-radius:4px; margin-top:8px; margin-bottom: 8px;">
+                                            Lambda_max: {{ alt_ahp_detail_dict.lambdaMax|float|round(4) if alt_ahp_detail_dict.lambdaMax is number else 'N/A' }}  |
+                                            CI: {{ alt_ahp_detail_dict.ci|float|round(4) if alt_ahp_detail_dict.ci is number else 'N/A' }}  |
+                                            RI: {{ alt_ahp_detail_dict.RI|float|round(2) if alt_ahp_detail_dict.RI is number else 'N/A' }} 
+                                            {% if alt_ahp_detail_dict.n is number %}(n={{alt_ahp_detail_dict.n}}){% endif %}
+                                        </div>
+                                        <p style="text-align:center; font-weight:bold; margin-top:10px; font-size:1.05rem;">
+                                            CR: {{ alt_ahp_detail_dict.CR|float|round(4) if alt_ahp_detail_dict.CR is number else alt_ahp_detail_dict.CR|default('N/A') }}
+                                            {% set consistency_status_text = '' %}
+                                            {% if alt_ahp_detail_dict.CR is number %}
+                                                {% if alt_ahp_detail_dict.is_consistent %}
+                                                    {% set consistency_status_text = '<span class="status-consistent">(Nhất quán)</span>' %}
+                                                {% else %}
+                                                    {% set consistency_status_text = '<span class="status-inconsistent">(Không nhất quán)</span>' %}
+                                                {% endif %}
+                                            {% elif alt_ahp_detail_dict.CR == "Lỗi nhập liệu" or alt_ahp_detail_dict.get('error') %}
+                                                 {% set consistency_status_text = '<span class="status-inconsistent">(' ~ (alt_ahp_detail_dict.CR or alt_ahp_detail_dict.get('error')) ~ ')</span>' %}
+                                            {% endif %}
+                                            {{ consistency_status_text | safe }}
+                                        </p>
+                                    {% else %}
+                                         <p style="text-align:center; color: #6c757d;">Không có đủ dữ liệu chi tiết (weights, wsv, cv) cho Tiêu chí: {{ current_criterion_name }}.</p>
+                                    {% endif %} {# Kết thúc if weights,wsv,cv #}
+                                {% elif alt_ahp_detail_dict and alt_ahp_detail_dict.get('error') %}
+                                     <p style="text-align:center; color: red;">Lỗi xử lý cho Tiêu chí {{ current_criterion_name }}: {{ alt_ahp_detail_dict.error }}</p>
+                                {% else %}
+                                    <p style="text-align:center; color: #6c757d;">Không có dữ liệu AHP đầy đủ hoặc không hợp lệ cho Tiêu chí: {{ current_criterion_name }}.</p>
+                                {% endif %} {# Kết thúc if alt_ahp_detail_dict and error is none #}
+                            </div> {# ĐÓNG THẺ DIV.SUB-MATRIX-DETAILS CHO MỖI crit_idx #}
+                        {% endfor %} {# Kết thúc for crit_idx_str #}
+                    </section>
+                {% endif %} {# Kết thúc if alternative_crs #}
+
+                <p class="formula-note">
+                    <b>Công thức tính điểm:</b> Điểm số cuối cùng của mỗi Phương án = Tổng của ( [Trọng số của Phương án đối với từng Tiêu chí] × [Trọng số của Tiêu chí tương ứng] )
+                </p>
+
+                <div class="results-grid">
+                   
+                    <section class="result-table-section">
+                        <h3>Bảng 1: Trọng số phương án theo tiêu chí</h3>
+                        {% if local_alternative_weights_matrix and alternatives and criteria_names %}
+                            <table class="comparison-table"> 
+                                <thead>
+                                    <tr>
+                                        <th class="highlight-header">Phương án \ Tiêu chí</th>
+                                        {% for crit_name in criteria_names %}
+                                            <th>{{ crit_name }}</th>
+                                        {% endfor %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for i in range(alternatives|length) %}
+                                    <tr>
+                                        <th class="highlight-header">{{ alternatives[i] }}</th>
+                                        {% for j in range(criteria_names|length) %}
+                                            <td>{{ local_alternative_weights_matrix[i][j]|float|round(5) if local_alternative_weights_matrix[i][j] is number else 'N/A' }}</td>
+                                        {% endfor %}
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% else %}
+                            <p>Không có dữ liệu trọng số của phương án.</p>
+                        {% endif %}
+                    </section>
+
+                    <section class="result-table-section">
+                        <h3>Bảng 2: Trọng số tiêu chí</h3>
+                        {% if criteria_weights and criteria_names %}
+                            <table class="comparison-table">
+                                <thead>
+                                    <tr>
+                                        <th>Tiêu chí</th>
+                                        <th>Trọng số</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for i in range(criteria_names|length) %}
+                                    <tr>
+                                        <th class="highlight-header">{{ criteria_names[i] }}</th>
+                                        <td>{{ criteria_weights[i]|float|round(5) if criteria_weights[i] is number else 'N/A' }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            <p style="text-align:center; font-size:0.9em; margin-top:10px;">
+                                CR Ma trận Tiêu chí:
+                                <strong>{{ cr_criteria|float|round(4) if cr_criteria is number else cr_criteria|default('N/A') }}</strong>
+                                {% if cr_criteria is number %}
+                                    {% if is_consistent_criteria %}
+                                        <span class="status-consistent">(Nhất quán)</span>
+                                    {% else %}
+                                        <span class="status-inconsistent">(Không nhất quán)</span>
+                                    {% endif %}
+                                {% endif %}
+                            </p>
+                        {% else %}
+                             <p>Không có dữ liệu trọng số tiêu chí.</p>
+                        {% endif %}
+                    </section>
+
+                    <section class="result-table-section">
+                        <h3>Bảng 3: Điểm số tổng hợp của phương án</h3>
+                        {% if alternative_scores and alternatives %}
+                             <table class="comparison-table">
+                                <thead>
+                                    <tr>
+                                        <th>Phương án</th>
+                                        <th>Điểm số</th>
+                                        <th>Phần trăm (%)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for i in range(alternatives|length) %}
+                                    <tr>
+                                        <th class="highlight-header">{{ alternatives[i] }}</th>
+                                        <td class="highlight">{{ alternative_scores[i]|float|round(4) if alternative_scores[i] is number else 'N/A' }}</td>
+                                        <td class="highlight">
+                                            {% if alternative_scores[i] is number %}
+                                                {{ (alternative_scores[i] * 100)|round(2) }}%
+                                            {% else %}
+                                                N/A
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% else %}
+                            <p>Không có dữ liệu điểm số cuối cùng.</p>
+                        {% endif %}
+                    </section>
+                </div> 
+
+                {% if ranked_alternatives %}
+                    <section class="result-table-section" style="margin-top: 30px;">
+                        <h3 style="color: #005555;">Xếp hạng các Phương án</h3>
+                        <table class="comparison-table">
+                           
+                            <thead>
+                                <tr>
+                                    <th>Hạng</th>
+                                    <th>Phương án</th>
+                                    <th>Điểm số</th>
+                                    <th>Phần trăm (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for alt_name, score in ranked_alternatives %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <th class="highlight-header">{{ alt_name }}</th>
+                                    <td class="highlight">{{ score|float|round(4) if score is number else 'N/A' }}</td>
+                                    <td class="highlight">
+                                        {% if score is number %}
+                                            {{ (score * 100)|round(2) }}%
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% if ranked_alternatives and ranked_alternatives|length > 0 %}
+                            <p style="text-align:center; margin-top:15px; font-weight:bold; font-size:1.15em;">
+                                <i class="fas fa-trophy" style="color: gold;"></i> Phương án được đề xuất:
+                                <span style="color: #28a745; text-decoration:underline;">{{ ranked_alternatives[0][0] }}</span>
+                                (Điểm: {{ ranked_alternatives[0][1]|float|round(4) }})
+                            </p>
+                        {% endif %} {# Đóng if ranked_alternatives and length > 0 #}
+                    </section>
+                {% endif %} {# Đóng if ranked_alternatives #}
+                
+                <div class="nav-button-container">
+                    <a href="{{ url_for('home') }}" class="nav-button">Bắt đầu Phân tích Mới</a>
+                    {% set analysis_id_to_use = analysis_id_for_report if analysis_id_for_report is defined else analysis_id if analysis_id is defined else None %}
+                    {% if analysis_id_to_use %}
+                        <a href="{{ url_for('download_excel_report', analysis_id=analysis_id_to_use) }}" class="nav-button" style="background-color: #198754;"> 
+                            <i class="fas fa-file-excel"></i> Xuất Excel
+                        </a>
+                        <a href="{{ url_for('download_pdf_report', analysis_id=analysis_id_to_use) }}" class="nav-button" style="background-color: #dc3545;"> 
+                            <i class="fas fa-file-pdf"></i> Xuất PDF
+                        </a>
+                    {% endif %} {# Đóng if analysis_id_to_use #}
+                </div>
+            </div> 
+        </main> 
+    </div> 
+    <footer>
+        Bản quyền thuộc về Nhóm 12 - Phát triển hệ thống thông tin
+    </footer>
+</body>
+</html>

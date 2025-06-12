@@ -1,0 +1,41 @@
+{
+    "cSpell.words": [
+        "bằng",
+        "chấp",
+        "chuỗi",
+        "cnxn",
+        "công",
+        "dạng",
+        "định",
+        "được",
+        "hoặc",
+        "HTQLDD",
+        "không",
+        "liệu",
+        "nghiêm",
+        "nghiệp",
+        "Nguồn",
+        "nguyên",
+        "nhận",
+        "nhiên",
+        "nhưng",
+        "nông",
+        "nước",
+        "Phân",
+        "Phát",
+        "phép",
+        "sánh",
+        "SVAD",
+        "thay",
+        "Thêm",
+        "theo",
+        "thiết",
+        "tích",
+        "tiêu",
+        "triển",
+        "trống"
+    ],
+    "python.analysis.extraPaths": [
+        "./controller"
+    ]
+}

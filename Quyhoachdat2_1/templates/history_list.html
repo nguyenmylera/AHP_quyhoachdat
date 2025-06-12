@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Lịch sử Phân tích AHP</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <style>
+        .history-table { width: 80%; margin: 20px auto; border-collapse: collapse; }
+        .history-table th, .history-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .history-table th { background-color: #f0f0f0; }
+        .no-history { text-align: center; margin-top: 30px; font-style: italic; }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="app_container">
+            <div class="sidebar">
+                <ul>
+                    <li><a href="{{ url_for('home') }}">Trang chủ / Bắt đầu lại</a></li>
+                    <li><a href="{{ url_for('history_list_route') }}">Lịch sử Phân tích</a></li>
+                </ul>
+            </div>
+            <div class="content-wrapper">
+                <header>LỊCH SỬ CÁC LẦN PHÂN TÍCH AHP</header>
+                <div class="content">
+                    <div class="grid">
+                        <div class="grid__row">
+                            <div class="grid_column-12">
+                                <div class="container">
+                                    {% with messages = get_flashed_messages(with_categories=true) %}
+                                        {% if messages %}
+                                            <ul class="flash-messages">
+                                            {% for category, message in messages %}
+                                                <li class="{{ category }}">{{ message }}</li>
+                                            {% endfor %}
+                                            </ul>
+                                        {% endif %}
+                                    {% endwith %}
+
+                                    <!-- templates/history_list.html -->
+                                {% if analyses %}
+                                    <table class="history-table">
+                                        <thead>
+                                            <tr>
+                                                <th>ID Phân tích</th>
+                                                <th>Tên Phân tích (Nếu có)</th>
+                                                <th>Ngày tạo</th>
+                                                <th>Hành động</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for analysis_item in analyses %}
+                                            <tr>
+                                                <td>{{ analysis_item.analysis_id }}</td>
+                                                <td>{{ analysis_item.analysis_name if analysis_item.analysis_name else '-' }}</td>
+                                                <td>{{ analysis_item.created_at.split('.')[0] }}</td>
+                                                <td>
+                                                    <a href="{{ url_for('view_result_route', analysis_id=analysis_item.analysis_id) }}" class="nav-button-small">Xem chi tiết</a>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                {% else %}
+                                    <p class="no-history">Chưa có lịch sử phân tích nào được lưu.</p>
+                                {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <footer>Bản quyền thuộc về Nhóm 12 - Phát triển hệ thống thông tin</footer>
+    </div>
+</body>
+</html>
